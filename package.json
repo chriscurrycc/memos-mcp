@@ -1,5 +1,5 @@
 {
-  "name": "memos-mcp",
+  "name": "@chriscurrycc/memos-mcp",
   "version": "0.1.0",
   "description": "Model Context Protocol server for Memos - a self-hosted note-taking service",
   "type": "module",

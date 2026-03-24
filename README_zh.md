@@ -17,7 +17,7 @@
 ### Claude Code
 
 ```bash
-claude mcp add memos -- npx memos-mcp
+claude mcp add memos -- npx @chriscurrycc/memos-mcp
 ```
 
 然后设置环境变量：

@@ -17,7 +17,7 @@ Enables AI assistants (Claude Code, Claude Desktop, Cursor, etc.) to read and wr
 ### Claude Code
 
 ```bash
-claude mcp add memos -- npx memos-mcp
+claude mcp add memos -- npx @chriscurrycc/memos-mcp
 ```
 
 Then set environment variables:
