@@ -17,14 +17,7 @@ Enables AI assistants (Claude Code, Claude Desktop, Cursor, etc.) to read and wr
 ### Claude Code
 
 ```bash
-claude mcp add memos -- npx @chriscurrycc/memos-mcp
-```
-
-Then set environment variables:
-
-```bash
-export MEMOS_URL=https://your-memos-instance.com
-export MEMOS_TOKEN=your-access-token
+claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -e MEMOS_TOKEN=your-access-token -- npx -y @chriscurrycc/memos-mcp
 ```
 
 ### Claude Desktop
@@ -36,7 +29,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "memos": {
       "command": "npx",
-      "args": ["-y", "memos-mcp"],
+      "args": ["-y", "@chriscurrycc/memos-mcp"],
       "env": {
         "MEMOS_URL": "https://your-memos-instance.com",
         "MEMOS_TOKEN": "your-access-token"
@@ -48,14 +41,30 @@ Add to your `claude_desktop_config.json`:
 
 ### With 1Password (recommended)
 
-Use `op run` to inject the token securely — no plaintext secrets on disk:
+Store your token securely in 1Password — no plaintext secrets on disk.
+
+1. Save the token to 1Password:
+
+```bash
+op item create --category=apiCredential --title="memos-api" token=your-access-token "valid from[date]=2026-01-01" "expires[date]=2026-02-01"
+```
+
+2. Configure with `op run` to inject the token at runtime:
+
+**Claude Code:**
+
+```bash
+claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -e MEMOS_TOKEN=op://Personal/memos-api/token -- op run --no-masking -- npx -y @chriscurrycc/memos-mcp
+```
+
+**Claude Desktop:**
 
 ```json
 {
   "mcpServers": {
     "memos": {
       "command": "op",
-      "args": ["run", "--", "npx", "-y", "memos-mcp"],
+      "args": ["run", "--no-masking", "--", "npx", "-y", "@chriscurrycc/memos-mcp"],
       "env": {
         "MEMOS_URL": "https://your-memos-instance.com",
         "MEMOS_TOKEN": "op://Personal/memos-api/token"

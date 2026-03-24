@@ -17,14 +17,7 @@
 ### Claude Code
 
 ```bash
-claude mcp add memos -- npx @chriscurrycc/memos-mcp
-```
-
-然后设置环境变量：
-
-```bash
-export MEMOS_URL=https://your-memos-instance.com
-export MEMOS_TOKEN=your-access-token
+claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -e MEMOS_TOKEN=your-access-token -- npx -y @chriscurrycc/memos-mcp
 ```
 
 ### Claude Desktop
@@ -36,7 +29,7 @@ export MEMOS_TOKEN=your-access-token
   "mcpServers": {
     "memos": {
       "command": "npx",
-      "args": ["-y", "memos-mcp"],
+      "args": ["-y", "@chriscurrycc/memos-mcp"],
       "env": {
         "MEMOS_URL": "https://your-memos-instance.com",
         "MEMOS_TOKEN": "your-access-token"
@@ -48,14 +41,30 @@ export MEMOS_TOKEN=your-access-token
 
 ### 配合 1Password 使用（推荐）
 
-使用 `op run` 安全注入令牌，避免明文存储：
+将令牌安全存储在 1Password 中，避免明文存储。
+
+1. 将令牌保存到 1Password：
+
+```bash
+op item create --category=apiCredential --title="memos-api" token=your-access-token "valid from[date]=2026-01-01" "expires[date]=2026-02-01"
+```
+
+2. 使用 `op run` 在运行时注入令牌：
+
+**Claude Code：**
+
+```bash
+claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -e MEMOS_TOKEN=op://Personal/memos-api/token -- op run --no-masking -- npx -y @chriscurrycc/memos-mcp
+```
+
+**Claude Desktop：**
 
 ```json
 {
   "mcpServers": {
     "memos": {
       "command": "op",
-      "args": ["run", "--", "npx", "-y", "memos-mcp"],
+      "args": ["run", "--no-masking", "--", "npx", "-y", "@chriscurrycc/memos-mcp"],
       "env": {
         "MEMOS_URL": "https://your-memos-instance.com",
         "MEMOS_TOKEN": "op://Personal/memos-api/token"
