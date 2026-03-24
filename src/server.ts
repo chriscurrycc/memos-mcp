@@ -27,7 +27,7 @@ export const createServer = () => {
 
   const server = new McpServer({
     name: "memos-mcp",
-    version: "0.1.0",
+    version: "0.1.1",
   });
 
   // Register all tools

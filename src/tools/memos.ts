@@ -16,12 +16,18 @@ export const registerMemoTools = (server: McpServer, client: MemosClient) => {
     async ({ pageSize, pageToken, filter, state }) => {
       const params: Record<string, string> = { pageSize: String(pageSize) };
       if (pageToken) params.pageToken = pageToken;
+
+      // Auto-inject creator filter so the API returns PRIVATE memos
+      const currentUser = await client.getCurrentUser();
+      const creatorFilter = `creator == "${currentUser}"`;
+
+      const filters: string[] = [creatorFilter];
+      if (filter) filters.push(filter);
       if (state) {
-        const stateFilter = `row_status == "${state === "ARCHIVED" ? "ARCHIVED" : "ACTIVE"}"`;
-        params.filter = filter ? `${filter} && ${stateFilter}` : stateFilter;
-      } else if (filter) {
-        params.filter = filter;
+        filters.push(`row_status == "${state === "ARCHIVED" ? "ARCHIVED" : "ACTIVE"}"`);
       }
+      params.filter = filters.join(" && ");
+
       const result = await client.get<{ memos: Memo[]; nextPageToken?: string }>("/api/v1/memos", params);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     }
@@ -47,7 +53,8 @@ export const registerMemoTools = (server: McpServer, client: MemosClient) => {
       pageSize: z.number().int().min(1).max(100).default(20).describe("Number of results"),
     },
     async ({ query, pageSize }) => {
-      const filter = `content.contains("${query.replace(/"/g, '\\"')}")`;
+      const currentUser = await client.getCurrentUser();
+      const filter = `creator == "${currentUser}" && content_search == ["${query.replace(/"/g, '\\"')}"]`;
       const result = await client.get<{ memos: Memo[]; nextPageToken?: string }>("/api/v1/memos", {
         pageSize: String(pageSize),
         filter,

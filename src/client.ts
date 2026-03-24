@@ -1,10 +1,19 @@
 export class MemosClient {
   private baseUrl: string;
   private token: string;
+  private _currentUser: string | null = null;
 
   constructor(baseUrl: string, token: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
     this.token = token;
+  }
+
+  // Fetch and cache the current user's name (e.g. "users/1")
+  async getCurrentUser(): Promise<string> {
+    if (this._currentUser) return this._currentUser;
+    const res = await this.post<{ name: string }>("/api/v1/auth/status", {});
+    this._currentUser = res.name;
+    return this._currentUser;
   }
 
   private headers(): Record<string, string> {
