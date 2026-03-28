@@ -14,6 +14,14 @@ Enables AI assistants (Claude Code, Claude Desktop, Cursor, etc.) to read and wr
 - A running Memos instance
 - A Memos access token (Settings → Access Tokens)
 
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MEMOS_URL` | Yes | Your Memos instance URL |
+| `MEMOS_TOKEN` | Yes | Memos access token |
+| `MEMOS_DEFAULT_VISIBILITY` | No | Default visibility for new memos (`PRIVATE`, `PROTECTED`, `PUBLIC`). Defaults to `PRIVATE` |
+
 ### Claude Code
 
 ```bash
@@ -80,71 +88,25 @@ claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -
 
 | Tool | Description |
 |------|-------------|
-| `list_memos` | List memos with filtering and pagination |
-| `get_memo` | Get a single memo by ID |
-| `search_memos` | Search memos by keyword |
-| `create_memo` | Create a new memo |
-| `update_memo` | Update content, visibility, pin, or archive state |
+| `list_memos` | Search and list memos with structured filters (keyword, tags, date range, visibility, pinned, content properties, etc.) |
+| `get_memo` | Get a single memo by numeric ID or UID string |
+| `create_memo` | Create a new memo with markdown content |
+| `update_memo` | Update content, visibility, pin, archive state, with optional `preserveUpdateTime` |
 | `delete_memo` | Permanently delete a memo |
-
-### Comments
-
-| Tool | Description |
-|------|-------------|
-| `list_memo_comments` | List comments on a memo |
-| `create_memo_comment` | Add a comment to a memo |
 
 ### Tags
 
 | Tool | Description |
 |------|-------------|
-| `list_pinned_tags` | List all pinned tags |
-| `list_tags_with_emoji` | List tags with their emojis |
-| `update_tag` | Update a tag's emoji or pinned status |
-
-### Resources
-
-| Tool | Description |
-|------|-------------|
-| `list_resources` | List all resources (attachments) |
-| `get_resource` | Get a resource by ID |
-| `delete_resource` | Delete a resource |
-| `link_resource_to_memo` | Link resources to a memo |
-
-### Relations
-
-| Tool | Description |
-|------|-------------|
-| `list_memo_relations` | List memo relations |
-| `set_memo_relations` | Set relations (replaces all) |
-| `delete_memo_relation` | Remove a specific relation |
-
-### Reactions
-
-| Tool | Description |
-|------|-------------|
-| `list_reactions` | List reactions on a memo |
-| `upsert_reaction` | Add a reaction emoji |
-| `delete_reaction` | Remove a reaction |
-
-### Review (Spaced Repetition)
-
-| Tool | Description |
-|------|-------------|
-| `list_review_memos` | Get memos due for review |
-| `get_random_memo` | Get a random memo |
-| `list_on_this_day_memos` | Memos created on this day in past years |
-| `get_time_travel_memos` | Memos from a random time period |
-| `record_review` | Record that memos have been reviewed |
-| `get_review_stats` | Get review statistics |
+| `list_tags` | List tags with usage counts, hierarchy support, and pinned/emoji metadata |
+| `update_tag` | Update a tag's pinned status or emoji |
+| `rename_tag` | Rename a tag across all memos |
 
 ## Prompts
 
 | Prompt | Description |
 |--------|-------------|
 | `capture` | Quick-save a thought as a memo |
-| `review` | Start a guided review session |
-| `daily_digest` | Summarize recent memo activity |
 
 ## Resources
 

@@ -45,12 +45,10 @@ export const registerPrompts = (server: McpServer) => {
             content: {
               type: "text",
               text: `Start a memo review session:
-1. Call list_review_memos to get memos due for review
-2. If the session is already completed, let me know
-3. Otherwise, present each memo one by one with its content
-4. After presenting all memos, ask if I want to record the review
-5. If yes, call record_review with the memo IDs and source REVIEW_SOURCE_REVIEW
-6. Finally, show the updated review stats using get_review_stats`,
+1. Call list_memos with random=true and pageSize=5 to get random memos for review
+2. Present each memo one by one with its content (use get_memo for full details)
+3. After presenting all memos, ask if I'd like to see more or stop
+4. Optionally suggest related memos based on tags`,
             },
           },
         ],
@@ -70,15 +68,14 @@ export const registerPrompts = (server: McpServer) => {
             content: {
               type: "text",
               text: `Create a daily digest of my memos:
-1. Call list_memos with pageSize 50 to get recent memos
-2. Call list_pinned_tags to see my important tags
+1. Call list_memos with pageSize=50 to get recent memos
+2. Call list_tags to see my top tags and their usage
 3. Summarize:
    - How many memos were created/updated recently
    - Key themes and topics based on tags
    - Any pinned memos that might need attention
-   - Any memos with incomplete tasks (if visible in properties)
-4. Check list_on_this_day_memos for any "on this day" memories
-5. Present everything in a concise daily briefing format`,
+   - Any memos with incomplete tasks (use hasIncompleteTasks filter)
+4. Present everything in a concise daily briefing format`,
             },
           },
         ],

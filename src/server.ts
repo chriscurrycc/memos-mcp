@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MemosClient } from "./client.js";
 import { registerMemoTools } from "./tools/memos.js";
 import { registerTagTools } from "./tools/tags.js";
-import { registerPrompts } from "./prompts/index.js";
 import { registerResources } from "./resources/index.js";
 
 const VALID_VISIBILITIES = ["PRIVATE", "PROTECTED", "PUBLIC"] as const;
@@ -36,9 +35,6 @@ export const createServer = () => {
 
   registerMemoTools(server, client, { defaultVisibility });
   registerTagTools(server, client);
-
-  // Register prompts
-  registerPrompts(server);
 
   // Register resources
   registerResources(server, client);
