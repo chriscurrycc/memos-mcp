@@ -261,8 +261,12 @@ export const registerMemoTools = (
         .enum(["NORMAL", "ARCHIVED"])
         .optional()
         .describe("Set to ARCHIVED to archive, NORMAL to restore"),
+      preserveUpdateTime: z
+        .boolean()
+        .optional()
+        .describe("When true, the memo's update time will not change. Use for formatting or style-only edits"),
     },
-    async ({ id, content, visibility, pinned, state }) => {
+    async ({ id, content, visibility, pinned, state, preserveUpdateTime }) => {
       const numericId = await resolveToNumericId(client, id);
 
       const body: Record<string, unknown> = {};
@@ -296,9 +300,11 @@ export const registerMemoTools = (
         };
       }
 
-      await client.patch<Memo>(`/api/v1/memos/${numericId}`, body, {
+      const params: Record<string, string> = {
         updateMask: updateMaskPaths.join(","),
-      });
+      };
+      if (preserveUpdateTime) params.preserveUpdateTime = "true";
+      await client.patch<Memo>(`/api/v1/memos/${numericId}`, body, params);
       return { content: [{ type: "text" as const, text: `Memo ${id} updated.` }] };
     }
   );
