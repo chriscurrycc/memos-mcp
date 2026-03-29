@@ -15,13 +15,13 @@ export const registerResources = (server: McpServer, client: MemosClient) => {
       const memo = await client.get<Memo>(`/api/v1/memos:by-uid/${uid}`);
 
       // Format as markdown with YAML frontmatter
+      const id = memo.name?.match(/^memos\/(\d+)$/)?.[1];
       const frontmatter = [
         "---",
+        id ? `id: ${id}` : null,
         `uid: ${memo.uid}`,
-        `name: ${memo.name}`,
-        `creator: ${memo.creator}`,
         `visibility: ${memo.visibility}`,
-        `pinned: ${memo.pinned}`,
+        memo.pinned ? `pinned: true` : null,
         `created: ${memo.createTime}`,
         `updated: ${memo.updateTime}`,
         memo.tags?.length ? `tags: [${memo.tags.join(", ")}]` : null,
