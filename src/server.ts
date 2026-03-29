@@ -34,7 +34,7 @@ export const createServer = () => {
 
   const server = new McpServer({
     name: "memos-mcp",
-    version: "0.2.0",
+    version: "1.0.0",
   });
 
   registerMemoTools(server, client, { defaultVisibility });
