@@ -102,11 +102,40 @@ claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -
 | `update_tag` | 更新标签的置顶状态或 Emoji |
 | `rename_tag` | 在所有 Memo 中重命名标签 |
 
+### 资源
+
+| 工具 | 描述 |
+|------|------|
+| `list_resources` | 列出所有资源（附件） |
+| `upload_resource` | 上传文件（Base64 编码），可选关联到 Memo |
+| `delete_resource` | 删除资源 |
+
+### 关联
+
+| 工具 | 描述 |
+|------|------|
+| `list_memo_relations` | 查看 Memo 关联关系，支持递归图遍历（深度 1-5） |
+| `set_memo_relations` | 添加或移除 Memo 之间的引用关联 |
+
+### 回顾
+
+| 工具 | 描述 |
+|------|------|
+| `get_review_memos` | 获取今日间隔回顾批次 |
+| `complete_review` | 标记当前回顾批次为已完成 |
+| `get_on_this_day_memos` | 获取历史上的今天创建的 Memo，按年分组 |
+| `update_review_setting` | 更新回顾设置（批次大小、标签筛选） |
+
 ## 提示词
 
 | 提示词 | 描述 |
 |--------|------|
 | `capture` | 快速保存一个想法为 Memo |
+| `review` | 开始一次引导式间隔回顾 |
+| `on_this_day` | 查看历史上的今天 |
+| `digest` | 总结指定时间段的 Memo 活动（今天/本周/本月） |
+| `tag_overview` | 查看标签体系和组织结构 |
+| `relation_graph` | 从某条 Memo 出发探索关系图谱 |
 
 ## 资源
 

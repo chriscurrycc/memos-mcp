@@ -102,11 +102,40 @@ claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -
 | `update_tag` | Update a tag's pinned status or emoji |
 | `rename_tag` | Rename a tag across all memos |
 
+### Resources
+
+| Tool | Description |
+|------|-------------|
+| `list_resources` | List all resources (attachments) |
+| `upload_resource` | Upload a file (base64 encoded), with optional memo linking |
+| `delete_resource` | Delete a resource |
+
+### Relations
+
+| Tool | Description |
+|------|-------------|
+| `list_memo_relations` | List memo relations with recursive graph traversal (depth 1-5) |
+| `set_memo_relations` | Add or remove REFERENCE relations between memos |
+
+### Review
+
+| Tool | Description |
+|------|-------------|
+| `get_review_memos` | Get today's spaced-repetition review batch |
+| `complete_review` | Mark the current review batch as completed |
+| `get_on_this_day_memos` | Get memos created on this day in previous years, grouped by year |
+| `update_review_setting` | Update review preferences (batch size, tag filters) |
+
 ## Prompts
 
 | Prompt | Description |
 |--------|-------------|
 | `capture` | Quick-save a thought as a memo |
+| `review` | Start a guided spaced-repetition review session |
+| `on_this_day` | See memos from this day in previous years |
+| `digest` | Summarize memo activity for a time period (today/week/month) |
+| `tag_overview` | Review your tag system and organization |
+| `relation_graph` | Explore the relation graph starting from a memo |
 
 ## Resources
 
