@@ -52,9 +52,14 @@ export interface Resource {
   memo?: string;
 }
 
+export interface MemoRelationRef {
+  name: string;
+  uid?: string;
+}
+
 export interface MemoRelation {
-  memo: string;
-  relatedMemo: string;
+  memo: string | MemoRelationRef;
+  relatedMemo: string | MemoRelationRef;
   type: MemoRelationType;
 }
 

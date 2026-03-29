@@ -13,7 +13,9 @@ async function resolveToNumericId(client: MemosClient, id: string): Promise<numb
   return parseInt(match[1], 10);
 }
 
-function extractId(name: string): number | undefined {
+function extractId(memoRef: unknown): number | undefined {
+  const name = typeof memoRef === "string" ? memoRef : (memoRef as Record<string, unknown>)?.name as string;
+  if (!name || typeof name !== "string") return undefined;
   const match = name.match(/^memos\/(\d+)$/);
   return match ? parseInt(match[1], 10) : undefined;
 }
