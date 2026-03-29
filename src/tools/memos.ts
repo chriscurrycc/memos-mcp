@@ -179,7 +179,8 @@ export const registerMemoTools = (
         visibility: visibility ?? options.defaultVisibility,
       });
       const id = memo.name?.match(/^memos\/(\d+)$/)?.[1];
-      const result = { id: id ? Number(id) : undefined, uid: memo.uid, visibility: memo.visibility };
+      const url = `${client.baseUrl}/m/${memo.uid}`;
+      const result = { id: id ? Number(id) : undefined, uid: memo.uid, visibility: memo.visibility, url };
       return { content: [{ type: "text" as const, text: JSON.stringify(result) }] };
     }
   );
@@ -236,8 +237,9 @@ export const registerMemoTools = (
         updateMask: updateMaskPaths.join(","),
       };
       if (preserveUpdateTime) params.preserveUpdateTime = "true";
-      await client.patch<Memo>(`/api/v1/memos/${numericId}`, body, params);
-      return { content: [{ type: "text" as const, text: `Memo ${id} updated.` }] };
+      const memo = await client.patch<Memo>(`/api/v1/memos/${numericId}`, body, params);
+      const url = `${client.baseUrl}/m/${memo.uid}`;
+      return { content: [{ type: "text" as const, text: `Memo updated: ${url}` }] };
     }
   );
 

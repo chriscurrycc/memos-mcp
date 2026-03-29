@@ -1,5 +1,5 @@
 export class MemosClient {
-  private baseUrl: string;
+  readonly baseUrl: string;
   private token: string;
   private _currentUser: string | null = null;
 

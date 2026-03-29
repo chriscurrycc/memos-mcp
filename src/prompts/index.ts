@@ -49,9 +49,18 @@ export const registerPrompts = (server: McpServer) => {
             text: `Start a memo review session:
 1. Call get_review_memos to get today's review batch
 2. If completed=true, let me know today's review is done and ask if I want to load a new batch (refresh=true)
-3. Otherwise, use get_memo to fetch full content for each memo and present them one by one
-4. After presenting all memos, call complete_review with the memo IDs to mark the batch as completed
-5. Congratulate me on completing the review`,
+3. Otherwise, present memos ONE AT A TIME in an interactive flow:
+   a. Use get_memo to fetch the full content of the FIRST memo and present it
+   b. Present the memo with ALL of its content (do not omit anything). Include:
+      - Created time and updated time at the top
+      - The full memo content with proper formatting (keep inline tags as-is in the content)
+      - If there are tags NOT already visible at the end of the content, display them highlighted at the bottom. If tags are already at the end of the content, no need to repeat them.
+      You may reformat for readability but must preserve the exact markdown formatting (bold, italic, links, etc.) from the original content. Do not drop any content or tags.
+   c. Wait for the user to confirm before moving to the next memo (e.g. user says "next", "ok", "continue", etc.)
+   d. Repeat for each memo until all memos have been reviewed
+4. After the LAST memo is presented and the user confirms, ask the user if they want to mark this review batch as completed
+5. Only call complete_review with the memo IDs after the user explicitly confirms completion
+6. Congratulate me on completing the review`,
           },
         },
       ],
