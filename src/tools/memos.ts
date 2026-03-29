@@ -101,48 +101,28 @@ export const registerMemoTools = (
 ) => {
   const visibilityEnum = z.enum(["PRIVATE", "PROTECTED", "PUBLIC"]);
 
-  // 1. list_memos
-  server.tool(
+  server.registerTool(
     "list_memos",
-    "Search and list memos. All filters are optional and combined with AND logic.",
     {
-      query: z.string().optional().describe("Keyword search in memo content"),
-      tags: z.array(z.string()).optional().describe("Filter by tags, e.g. [\"project\", \"todo\"]"),
-      visibility: z
-        .array(visibilityEnum)
-        .optional()
-        .describe("Filter by visibility levels"),
-      state: z
-        .enum(["NORMAL", "ARCHIVED"])
-        .optional()
-        .describe("Filter by memo state"),
-      pinned: z.boolean().optional().describe("Filter by pinned status"),
-      startDate: z
-        .string()
-        .optional()
-        .describe("Return memos after this date (ISO 8601, e.g. \"2025-01-01\")"),
-      endDate: z
-        .string()
-        .optional()
-        .describe("Return memos before this date (ISO 8601, e.g. \"2025-03-01\")"),
-      hasLink: z.boolean().optional().describe("Filter to memos containing links"),
-      hasTaskList: z.boolean().optional().describe("Filter to memos containing task lists"),
-      hasCode: z.boolean().optional().describe("Filter to memos containing code blocks"),
-      hasIncompleteTasks: z
-        .boolean()
-        .optional()
-        .describe("Filter to memos with incomplete tasks"),
-      random: z.boolean().optional().describe("Return results in random order"),
-      pageSize: z
-        .number()
-        .int()
-        .min(1)
-        .max(100)
-        .default(20)
-        .describe("Number of memos per page"),
-      pageToken: z.string().optional().describe("Token for fetching the next page"),
+      description: "Search and list memos. All filters are optional and combined with AND logic.",
+      inputSchema: {
+        query: z.string().optional().describe("Keyword search in memo content"),
+        tags: z.array(z.string()).optional().describe("Filter by tags, e.g. [\"project\", \"todo\"]"),
+        visibility: z.array(visibilityEnum).optional().describe("Filter by visibility levels"),
+        state: z.enum(["NORMAL", "ARCHIVED"]).optional().describe("Filter by memo state"),
+        pinned: z.boolean().optional().describe("Filter by pinned status"),
+        startDate: z.string().optional().describe("Return memos after this date (ISO 8601, e.g. \"2025-01-01\")"),
+        endDate: z.string().optional().describe("Return memos before this date (ISO 8601, e.g. \"2025-03-01\")"),
+        hasLink: z.boolean().optional().describe("Filter to memos containing links"),
+        hasTaskList: z.boolean().optional().describe("Filter to memos containing task lists"),
+        hasCode: z.boolean().optional().describe("Filter to memos containing code blocks"),
+        hasIncompleteTasks: z.boolean().optional().describe("Filter to memos with incomplete tasks"),
+        random: z.boolean().optional().describe("Return results in random order"),
+        pageSize: z.number().int().min(1).max(100).default(20).describe("Number of memos per page"),
+        pageToken: z.string().optional().describe("Token for fetching the next page"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async (args) => {
       const currentUser = await client.getCurrentUser();
       const filter = buildCelFilter({ creator: currentUser, ...args });
@@ -164,19 +144,15 @@ export const registerMemoTools = (
     }
   );
 
-  // 2. get_memo
-  server.tool(
+  server.registerTool(
     "get_memo",
-    "Get a single memo by its numeric ID or UID string (the ID from the memo URL).",
     {
-      id: z
-        .string()
-        .min(1)
-        .describe(
-          "Memo identifier. Numeric ID (e.g. \"42\") or UID string (e.g. \"AjF4AQJayxvDj2mrWzFWuP\")"
-        ),
+      description: "Get a single memo by its numeric ID or UID string (the ID from the memo URL).",
+      inputSchema: {
+        id: z.string().min(1).describe("Memo identifier. Numeric ID (e.g. \"42\") or UID string (e.g. \"AjF4AQJayxvDj2mrWzFWuP\")"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async ({ id }) => {
       const path = /^\d+$/.test(id)
         ? `/api/v1/memos/${id}`
@@ -187,17 +163,16 @@ export const registerMemoTools = (
     }
   );
 
-  // 3. create_memo
-  server.tool(
+  server.registerTool(
     "create_memo",
-    "Create a new memo with markdown content.",
     {
-      content: z.string().min(1).describe("Memo content in markdown. Tags can be included with #tagname syntax"),
-      visibility: visibilityEnum
-        .optional()
-        .describe("Memo visibility. Omit to use the configured default"),
+      description: "Create a new memo with markdown content.",
+      inputSchema: {
+        content: z.string().min(1).describe("Memo content in markdown. Tags can be included with #tagname syntax"),
+        visibility: visibilityEnum.optional().describe("Memo visibility. Omit to use the configured default"),
+      },
+      annotations: { destructiveHint: false, openWorldHint: false },
     },
-    { destructiveHint: false, openWorldHint: false },
     async ({ content, visibility }) => {
       const memo = await client.post<Memo>("/api/v1/memos", {
         content,
@@ -209,28 +184,20 @@ export const registerMemoTools = (
     }
   );
 
-  // 4. update_memo
-  server.tool(
+  server.registerTool(
     "update_memo",
-    "Update an existing memo. Only the fields you provide will be modified.",
     {
-      id: z
-        .string()
-        .min(1)
-        .describe("Memo identifier. Numeric ID or UID string"),
-      content: z.string().optional().describe("New memo content in markdown"),
-      visibility: visibilityEnum.optional().describe("New visibility level"),
-      pinned: z.boolean().optional().describe("Pin or unpin the memo"),
-      state: z
-        .enum(["NORMAL", "ARCHIVED"])
-        .optional()
-        .describe("Set to ARCHIVED to archive, NORMAL to restore"),
-      preserveUpdateTime: z
-        .boolean()
-        .optional()
-        .describe("When true, the memo's update time will not change. Use for formatting or style-only edits"),
+      description: "Update an existing memo. Only the fields you provide will be modified.",
+      inputSchema: {
+        id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
+        content: z.string().optional().describe("New memo content in markdown"),
+        visibility: visibilityEnum.optional().describe("New visibility level"),
+        pinned: z.boolean().optional().describe("Pin or unpin the memo"),
+        state: z.enum(["NORMAL", "ARCHIVED"]).optional().describe("Set to ARCHIVED to archive, NORMAL to restore"),
+        preserveUpdateTime: z.boolean().optional().describe("When true, the memo's update time will not change. Use for formatting or style-only edits"),
+      },
+      annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ id, content, visibility, pinned, state, preserveUpdateTime }) => {
       const numericId = await resolveToNumericId(client, id);
 
@@ -274,17 +241,15 @@ export const registerMemoTools = (
     }
   );
 
-  // 5. delete_memo
-  server.tool(
+  server.registerTool(
     "delete_memo",
-    "Permanently delete a memo. This action cannot be undone.",
     {
-      id: z
-        .string()
-        .min(1)
-        .describe("Memo identifier. Numeric ID or UID string"),
+      description: "Permanently delete a memo. This action cannot be undone.",
+      inputSchema: {
+        id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
+      },
+      annotations: { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ id }) => {
       const numericId = await resolveToNumericId(client, id);
       await client.delete(`/api/v1/memos/${numericId}`);

@@ -19,11 +19,12 @@ function summarizeResource(res: Record<string, unknown>) {
 }
 
 export const registerResourceTools = (server: McpServer, client: MemosClient) => {
-  server.tool(
+  server.registerTool(
     "list_resources",
-    "List all resources (attachments) owned by the current user.",
-    {},
-    { readOnlyHint: true, openWorldHint: false },
+    {
+      description: "List all resources (attachments) owned by the current user.",
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const result = await client.get<{ resources: Resource[] }>("/api/v1/resources");
       const summaries = (result.resources || []).map((r) =>
@@ -33,20 +34,18 @@ export const registerResourceTools = (server: McpServer, client: MemosClient) =>
     }
   );
 
-  server.tool(
+  server.registerTool(
     "upload_resource",
-    "Upload a file as a resource. The file content must be base64 encoded. Optionally link it to a memo.",
     {
-      filename: z.string().min(1).describe("File name with extension, e.g. \"photo.jpg\""),
-      contentBase64: z.string().min(1).describe("File content as a base64 encoded string"),
-      type: z.string().optional().describe("MIME type, e.g. \"image/jpeg\". Auto-detected from extension if omitted"),
-      memoId: z
-        .number()
-        .int()
-        .optional()
-        .describe("Memo ID to link this resource to"),
+      description: "Upload a file as a resource. The file content must be base64 encoded. Optionally link it to a memo.",
+      inputSchema: {
+        filename: z.string().min(1).describe("File name with extension, e.g. \"photo.jpg\""),
+        contentBase64: z.string().min(1).describe("File content as a base64 encoded string"),
+        type: z.string().optional().describe("MIME type, e.g. \"image/jpeg\". Auto-detected from extension if omitted"),
+        memoId: z.number().int().optional().describe("Memo ID to link this resource to"),
+      },
+      annotations: { destructiveHint: false, openWorldHint: false },
     },
-    { destructiveHint: false, openWorldHint: false },
     async ({ filename, contentBase64, type, memoId }) => {
       const mimeType = type ?? guessMimeType(filename);
       const body: Record<string, unknown> = {
@@ -70,13 +69,15 @@ export const registerResourceTools = (server: McpServer, client: MemosClient) =>
     }
   );
 
-  server.tool(
+  server.registerTool(
     "delete_resource",
-    "Delete a resource permanently.",
     {
-      id: z.number().int().describe("Resource ID"),
+      description: "Delete a resource permanently.",
+      inputSchema: {
+        id: z.number().int().describe("Resource ID"),
+      },
+      annotations: { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ id }) => {
       await client.delete(`/api/v1/resources/${id}`);
       return { content: [{ type: "text" as const, text: `Resource ${id} deleted.` }] };

@@ -2,14 +2,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export const registerPrompts = (server: McpServer) => {
-  // 1. capture
-  server.prompt(
+  server.registerPrompt(
     "capture",
-    "Quick-save a thought as a memo",
     {
-      content: z.string().describe("The thought or note to capture"),
-      tags: z.string().optional().describe("Comma-separated tags to add, e.g. 'idea,project'"),
-      visibility: z.enum(["PRIVATE", "PROTECTED", "PUBLIC"]).default("PRIVATE").describe("Memo visibility"),
+      description: "Quick-save a thought as a memo",
+      argsSchema: {
+        content: z.string().describe("The thought or note to capture"),
+        tags: z.string().optional().describe("Comma-separated tags to add, e.g. 'idea,project'"),
+        visibility: z.enum(["PRIVATE", "PROTECTED", "PUBLIC"]).default("PRIVATE").describe("Memo visibility"),
+      },
     },
     ({ content, tags, visibility }) => {
       let memoContent = content;
@@ -34,11 +35,11 @@ export const registerPrompts = (server: McpServer) => {
     }
   );
 
-  // 2. review
-  server.prompt(
+  server.registerPrompt(
     "review",
-    "Start a spaced-repetition review session (间隔回顾)",
-    {},
+    {
+      description: "Start a spaced-repetition review session (间隔回顾)",
+    },
     () => ({
       messages: [
         {
@@ -57,11 +58,11 @@ export const registerPrompts = (server: McpServer) => {
     })
   );
 
-  // 3. on_this_day
-  server.prompt(
+  server.registerPrompt(
     "on_this_day",
-    "See memos from this day in previous years (历史上的今天)",
-    {},
+    {
+      description: "See memos from this day in previous years (历史上的今天)",
+    },
     () => ({
       messages: [
         {
@@ -79,15 +80,13 @@ export const registerPrompts = (server: McpServer) => {
     })
   );
 
-  // 4. digest
-  server.prompt(
+  server.registerPrompt(
     "digest",
-    "Summarize memo activity for a time period",
     {
-      period: z
-        .enum(["today", "week", "month"])
-        .default("week")
-        .describe("Time period to summarize"),
+      description: "Summarize memo activity for a time period",
+      argsSchema: {
+        period: z.enum(["today", "week", "month"]).default("week").describe("Time period to summarize"),
+      },
     },
     ({ period }) => {
       const periodMap = {
@@ -119,11 +118,11 @@ export const registerPrompts = (server: McpServer) => {
     }
   );
 
-  // 5. tag_overview
-  server.prompt(
+  server.registerPrompt(
     "tag_overview",
-    "Review your tag system and organization",
-    {},
+    {
+      description: "Review your tag system and organization",
+    },
     () => ({
       messages: [
         {
@@ -145,12 +144,13 @@ export const registerPrompts = (server: McpServer) => {
     })
   );
 
-  // 6. relation_graph
-  server.prompt(
+  server.registerPrompt(
     "relation_graph",
-    "Explore the relation graph starting from a memo (关系图谱)",
     {
-      memo: z.string().describe("Memo ID or UID to start from"),
+      description: "Explore the relation graph starting from a memo (关系图谱)",
+      argsSchema: {
+        memo: z.string().describe("Memo ID or UID to start from"),
+      },
     },
     ({ memo }) => ({
       messages: [

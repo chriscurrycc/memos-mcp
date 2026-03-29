@@ -3,7 +3,7 @@ import { MemosClient } from "../client.js";
 import type { Memo } from "../types.js";
 
 export const registerResources = (server: McpServer, client: MemosClient) => {
-  server.resource(
+  server.registerResource(
     "memo",
     "memo://memos/{uid}",
     { description: "A memo by its UID", mimeType: "text/markdown" },
@@ -14,7 +14,6 @@ export const registerResources = (server: McpServer, client: MemosClient) => {
       }
       const memo = await client.get<Memo>(`/api/v1/memos:by-uid/${uid}`);
 
-      // Format as markdown with YAML frontmatter
       const id = memo.name?.match(/^memos\/(\d+)$/)?.[1];
       const frontmatter = [
         "---",

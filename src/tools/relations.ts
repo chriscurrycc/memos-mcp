@@ -53,7 +53,6 @@ async function buildRelationGraph(
       edgeSet.add(edgeKey);
       edges.push({ from: fromId, to: toId, type: r.type });
 
-      // Expand the neighbor if within depth
       const neighborId = fromId === id ? toId : fromId;
       if (depth < maxDepth && !visited.has(neighborId)) {
         queue.push({ id: neighborId, depth: depth + 1 });
@@ -65,25 +64,21 @@ async function buildRelationGraph(
 }
 
 export const registerRelationTools = (server: McpServer, client: MemosClient) => {
-  server.tool(
+  server.registerTool(
     "list_memo_relations",
-    [
-      "List relations of a memo. Returns edges with direction (from → to) and type.",
-      "- depth=1 (default): direct relations only.",
-      "- depth=2+: recursively expand related memos to build a relation graph.",
-      "Each edge shows {from, to, type}. Use get_memo to inspect specific nodes.",
-    ].join(" "),
     {
-      id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
-      depth: z
-        .number()
-        .int()
-        .min(1)
-        .max(5)
-        .default(1)
-        .describe("How many levels deep to traverse. 1 = direct relations, 2+ = recursive graph"),
+      description: [
+        "List relations of a memo. Returns edges with direction (from → to) and type.",
+        "- depth=1 (default): direct relations only.",
+        "- depth=2+: recursively expand related memos to build a relation graph.",
+        "Each edge shows {from, to, type}. Use get_memo to inspect specific nodes.",
+      ].join(" "),
+      inputSchema: {
+        id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
+        depth: z.number().int().min(1).max(5).default(1).describe("How many levels deep to traverse. 1 = direct relations, 2+ = recursive graph"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async ({ id, depth }) => {
       const numericId = await resolveToNumericId(client, id);
       const { nodes, edges } = await buildRelationGraph(client, numericId, depth);
@@ -101,23 +96,22 @@ export const registerRelationTools = (server: McpServer, client: MemosClient) =>
     }
   );
 
-  server.tool(
+  server.registerTool(
     "set_memo_relations",
-    [
-      "Add or remove REFERENCE relations for a memo.",
-      "- action=\"add\": add new references without affecting existing ones.",
-      "- action=\"remove\": remove specific references.",
-      "Note: COMMENT relations are managed by the system and cannot be modified here.",
-    ].join(" "),
     {
-      id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
-      action: z.enum(["add", "remove"]).describe("Whether to add or remove relations"),
-      targetIds: z
-        .array(z.string().min(1))
-        .min(1)
-        .describe("IDs of memos to add/remove as references. Numeric IDs or UID strings"),
+      description: [
+        "Add or remove REFERENCE relations for a memo.",
+        "- action=\"add\": add new references without affecting existing ones.",
+        "- action=\"remove\": remove specific references.",
+        "Note: COMMENT relations are managed by the system and cannot be modified here.",
+      ].join(" "),
+      inputSchema: {
+        id: z.string().min(1).describe("Memo identifier. Numeric ID or UID string"),
+        action: z.enum(["add", "remove"]).describe("Whether to add or remove relations"),
+        targetIds: z.array(z.string().min(1)).min(1).describe("IDs of memos to add/remove as references. Numeric IDs or UID strings"),
+      },
+      annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ id, action, targetIds }) => {
       const numericId = await resolveToNumericId(client, id);
 

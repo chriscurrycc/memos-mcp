@@ -10,17 +10,15 @@ interface OnThisDayGroup {
 }
 
 export const registerReviewTools = (server: McpServer, client: MemosClient) => {
-  // 1. get_review_memos
-  server.tool(
+  server.registerTool(
     "get_review_memos",
-    "Get today's batch of memos for spaced-repetition review (回顾). Returns a daily batch selected by the review algorithm.",
     {
-      refresh: z
-        .boolean()
-        .optional()
-        .describe("Load a new batch even if today's review is already completed"),
+      description: "Get today's batch of memos for spaced-repetition review (回顾). Returns a daily batch selected by the review algorithm.",
+      inputSchema: {
+        refresh: z.boolean().optional().describe("Load a new batch even if today's review is already completed"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async ({ refresh }) => {
       const params: Record<string, string> = {};
       if (refresh) params.force = "true";
@@ -42,17 +40,15 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
     }
   );
 
-  // 2. complete_review
-  server.tool(
+  server.registerTool(
     "complete_review",
-    "Mark the current review batch as completed. Call this after the user has finished reviewing all memos from get_review_memos.",
     {
-      memoIds: z
-        .array(z.number().int())
-        .min(1)
-        .describe("IDs of the reviewed memos"),
+      description: "Mark the current review batch as completed. Call this after the user has finished reviewing all memos from get_review_memos.",
+      inputSchema: {
+        memoIds: z.array(z.number().int()).min(1).describe("IDs of the reviewed memos"),
+      },
+      annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ memoIds }) => {
       const result = await client.post<{ sessionId: number; recordedCount: number }>(
         "/api/v1/review/record",
@@ -72,27 +68,16 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
     }
   );
 
-  // 3. get_on_this_day_memos
-  server.tool(
+  server.registerTool(
     "get_on_this_day_memos",
-    "Get memos created on this day in previous years, grouped by year. Great for revisiting past thoughts and memories.",
     {
-      month: z
-        .number()
-        .int()
-        .min(1)
-        .max(12)
-        .optional()
-        .describe("Month (1-12), defaults to current month"),
-      day: z
-        .number()
-        .int()
-        .min(1)
-        .max(31)
-        .optional()
-        .describe("Day (1-31), defaults to current day"),
+      description: "Get memos created on this day in previous years, grouped by year. Great for revisiting past thoughts and memories.",
+      inputSchema: {
+        month: z.number().int().min(1).max(12).optional().describe("Month (1-12), defaults to current month"),
+        day: z.number().int().min(1).max(31).optional().describe("Day (1-31), defaults to current day"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async ({ month, day }) => {
       const params: Record<string, string> = {
         pageSize: "100",
@@ -120,34 +105,22 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
     }
   );
 
-  // 4. update_review_setting
-  server.tool(
+  server.registerTool(
     "update_review_setting",
-    "Update review preferences: how many memos per batch, and which tags to include or exclude.",
     {
-      sessionSize: z
-        .number()
-        .int()
-        .min(1)
-        .max(50)
-        .optional()
-        .describe("Number of memos per review batch (default 10)"),
-      includeTags: z
-        .array(z.string())
-        .optional()
-        .describe("Only review memos with these tags. Empty array or omit for all tags"),
-      excludeTags: z
-        .array(z.string())
-        .optional()
-        .describe("Skip memos with these tags"),
+      description: "Update review preferences: how many memos per batch, and which tags to include or exclude.",
+      inputSchema: {
+        sessionSize: z.number().int().min(1).max(50).optional().describe("Number of memos per review batch (default 10)"),
+        includeTags: z.array(z.string()).optional().describe("Only review memos with these tags. Empty array or omit for all tags"),
+        excludeTags: z.array(z.string()).optional().describe("Skip memos with these tags"),
+      },
+      annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ sessionSize, includeTags, excludeTags }) => {
       const currentUser = await client.getCurrentUser();
       const userId = currentUser.match(/^users\/(\d+)$/)?.[1];
       if (!userId) throw new Error(`Unexpected user format: ${currentUser}`);
 
-      // Get current setting first
       const current = await client.get<{
         reviewSetting?: { sessionSize?: number; includeTags?: string[]; excludeTags?: string[] };
       }>(`/api/v1/users/${userId}/setting`);

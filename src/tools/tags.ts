@@ -58,34 +58,25 @@ async function fetchAllMemoMetadata(client: MemosClient): Promise<Memo[]> {
 }
 
 export const registerTagTools = (server: McpServer, client: MemosClient) => {
-  server.tool(
+  server.registerTool(
     "list_tags",
-    [
-      "List tags with usage counts. Returns {name, count, hasChildren, pinned, emoji} for each tag.",
-      "- No args: top-level tags only.",
-      "- recursive=true: every tag (flat list, good for recommending tags).",
-      "- parent=\"x\": direct children of tag \"x\".",
-      "- parent=\"x\" + recursive=true: all descendants under \"x\".",
-      "- pinnedOnly=true: only user-pinned tags.",
-      "Tags use \"/\" for hierarchy (e.g. \"project/work/backend\").",
-    ].join(" "),
     {
-      parent: z
-        .string()
-        .optional()
-        .describe(
-          "Parent tag to scope the listing (e.g. \"project\" or \"project/work\"). Omit to start from root"
-        ),
-      recursive: z
-        .boolean()
-        .optional()
-        .describe("When true, return all tags/descendants instead of only direct children"),
-      pinnedOnly: z
-        .boolean()
-        .optional()
-        .describe("When true, only return user-pinned tags"),
+      description: [
+        "List tags with usage counts. Returns {name, count, hasChildren, pinned, emoji} for each tag.",
+        "- No args: top-level tags only.",
+        "- recursive=true: every tag (flat list, good for recommending tags).",
+        "- parent=\"x\": direct children of tag \"x\".",
+        "- parent=\"x\" + recursive=true: all descendants under \"x\".",
+        "- pinnedOnly=true: only user-pinned tags.",
+        "Tags use \"/\" for hierarchy (e.g. \"project/work/backend\").",
+      ].join(" "),
+      inputSchema: {
+        parent: z.string().optional().describe("Parent tag to scope the listing (e.g. \"project\" or \"project/work\"). Omit to start from root"),
+        recursive: z.boolean().optional().describe("When true, return all tags/descendants instead of only direct children"),
+        pinnedOnly: z.boolean().optional().describe("When true, only return user-pinned tags"),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    { readOnlyHint: true, openWorldHint: false },
     async ({ parent, recursive, pinnedOnly }) => {
       const [memos, pinnedResult] = await Promise.all([
         fetchAllMemoMetadata(client),
@@ -127,15 +118,17 @@ export const registerTagTools = (server: McpServer, client: MemosClient) => {
     }
   );
 
-  server.tool(
+  server.registerTool(
     "update_tag",
-    "Update a tag's pinned status or emoji. Pinned tags are highlighted in the UI for quick access.",
     {
-      tagName: z.string().min(1).describe("Tag name (without #)"),
-      emoji: z.string().optional().describe("Emoji to associate with the tag (e.g. \"📅\"). Pass empty string to remove"),
-      pinned: z.boolean().optional().describe("Pin or unpin the tag"),
+      description: "Update a tag's pinned status or emoji. Pinned tags are highlighted in the UI for quick access.",
+      inputSchema: {
+        tagName: z.string().min(1).describe("Tag name (without #)"),
+        emoji: z.string().optional().describe("Emoji to associate with the tag (e.g. \"📅\"). Pass empty string to remove"),
+        pinned: z.boolean().optional().describe("Pin or unpin the tag"),
+      },
+      annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ tagName, emoji, pinned }) => {
       const body: Record<string, unknown> = {};
       const updateMaskPaths: string[] = [];
@@ -161,16 +154,17 @@ export const registerTagTools = (server: McpServer, client: MemosClient) => {
     }
   );
 
-  server.tool(
+  server.registerTool(
     "rename_tag",
-    "Rename a tag across ALL memos. This is a destructive operation that modifies memo content globally — use with caution.",
     {
-      oldTag: z.string().min(1).describe("Current tag name (without #)"),
-      newTag: z.string().min(1).describe("New tag name (without #)"),
+      description: "Rename a tag across ALL memos. This is a destructive operation that modifies memo content globally — use with caution.",
+      inputSchema: {
+        oldTag: z.string().min(1).describe("Current tag name (without #)"),
+        newTag: z.string().min(1).describe("New tag name (without #)"),
+      },
+      annotations: { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },
-    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ oldTag, newTag }) => {
-      // parent = "memos/-" means rename across all memos
       await client.patch(`/api/v1/memos/-/tags:rename`, {
         parent: "memos/-",
         oldTag,
