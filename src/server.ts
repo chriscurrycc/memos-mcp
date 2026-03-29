@@ -5,6 +5,7 @@ import { registerTagTools } from "./tools/tags.js";
 import { registerResourceTools } from "./tools/resources.js";
 import { registerRelationTools } from "./tools/relations.js";
 import { registerReviewTools } from "./tools/review.js";
+import { registerPrompts } from "./prompts/index.js";
 import { registerResources } from "./resources/index.js";
 
 const VALID_VISIBILITIES = ["PRIVATE", "PROTECTED", "PUBLIC"] as const;
@@ -41,6 +42,7 @@ export const createServer = () => {
   registerResourceTools(server, client);
   registerRelationTools(server, client);
   registerReviewTools(server, client);
+  registerPrompts(server);
 
   // Register MCP resources
   registerResources(server, client);
