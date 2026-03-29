@@ -3,3 +3,4 @@ dist/
 *.tsbuildinfo
 .env
 .mcp.json
+.claude/settings.local.json
