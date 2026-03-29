@@ -20,6 +20,7 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
         .optional()
         .describe("Load a new batch even if today's review is already completed"),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ refresh }) => {
       const params: Record<string, string> = {};
       if (refresh) params.force = "true";
@@ -51,6 +52,7 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
         .min(1)
         .describe("IDs of the reviewed memos"),
     },
+    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ memoIds }) => {
       const result = await client.post<{ sessionId: number; recordedCount: number }>(
         "/api/v1/review/record",
@@ -90,6 +92,7 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
         .optional()
         .describe("Day (1-31), defaults to current day"),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ month, day }) => {
       const params: Record<string, string> = {
         pageSize: "100",
@@ -138,6 +141,7 @@ export const registerReviewTools = (server: McpServer, client: MemosClient) => {
         .optional()
         .describe("Skip memos with these tags"),
     },
+    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ sessionSize, includeTags, excludeTags }) => {
       const currentUser = await client.getCurrentUser();
       const userId = currentUser.match(/^users\/(\d+)$/)?.[1];

@@ -85,6 +85,7 @@ export const registerTagTools = (server: McpServer, client: MemosClient) => {
         .optional()
         .describe("When true, only return user-pinned tags"),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ parent, recursive, pinnedOnly }) => {
       const [memos, pinnedResult] = await Promise.all([
         fetchAllMemoMetadata(client),
@@ -134,6 +135,7 @@ export const registerTagTools = (server: McpServer, client: MemosClient) => {
       emoji: z.string().optional().describe("Emoji to associate with the tag (e.g. \"📅\"). Pass empty string to remove"),
       pinned: z.boolean().optional().describe("Pin or unpin the tag"),
     },
+    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ tagName, emoji, pinned }) => {
       const body: Record<string, unknown> = {};
       const updateMaskPaths: string[] = [];
@@ -166,7 +168,7 @@ export const registerTagTools = (server: McpServer, client: MemosClient) => {
       oldTag: z.string().min(1).describe("Current tag name (without #)"),
       newTag: z.string().min(1).describe("New tag name (without #)"),
     },
-    { destructiveHint: true },
+    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ oldTag, newTag }) => {
       // parent = "memos/-" means rename across all memos
       await client.patch(`/api/v1/memos/-/tags:rename`, {

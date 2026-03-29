@@ -80,10 +80,8 @@ async function resolveToNumericId(client: MemosClient, id: string): Promise<numb
 
 function cleanMemo(memo: Record<string, unknown>) {
   const { name, nodes, snippet, creator, ...rest } = memo;
-  // Add clean numeric id
   const id = (name as string)?.match(/^memos\/(\d+)$/)?.[1];
   if (id) rest.id = Number(id);
-  // Remove empty arrays
   for (const key of ["resources", "relations", "reactions"]) {
     if (Array.isArray(rest[key]) && (rest[key] as unknown[]).length === 0) {
       delete rest[key];
@@ -144,6 +142,7 @@ export const registerMemoTools = (
         .describe("Number of memos per page"),
       pageToken: z.string().optional().describe("Token for fetching the next page"),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async (args) => {
       const currentUser = await client.getCurrentUser();
       const filter = buildCelFilter({ creator: currentUser, ...args });
@@ -177,6 +176,7 @@ export const registerMemoTools = (
           "Memo identifier. Numeric ID (e.g. \"42\") or UID string (e.g. \"AjF4AQJayxvDj2mrWzFWuP\")"
         ),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ id }) => {
       const path = /^\d+$/.test(id)
         ? `/api/v1/memos/${id}`
@@ -197,6 +197,7 @@ export const registerMemoTools = (
         .optional()
         .describe("Memo visibility. Omit to use the configured default"),
     },
+    { destructiveHint: false, openWorldHint: false },
     async ({ content, visibility }) => {
       const memo = await client.post<Memo>("/api/v1/memos", {
         content,
@@ -229,6 +230,7 @@ export const registerMemoTools = (
         .optional()
         .describe("When true, the memo's update time will not change. Use for formatting or style-only edits"),
     },
+    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ id, content, visibility, pinned, state, preserveUpdateTime }) => {
       const numericId = await resolveToNumericId(client, id);
 
@@ -282,6 +284,7 @@ export const registerMemoTools = (
         .min(1)
         .describe("Memo identifier. Numeric ID or UID string"),
     },
+    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ id }) => {
       const numericId = await resolveToNumericId(client, id);
       await client.delete(`/api/v1/memos/${numericId}`);

@@ -83,6 +83,7 @@ export const registerRelationTools = (server: McpServer, client: MemosClient) =>
         .default(1)
         .describe("How many levels deep to traverse. 1 = direct relations, 2+ = recursive graph"),
     },
+    { readOnlyHint: true, openWorldHint: false },
     async ({ id, depth }) => {
       const numericId = await resolveToNumericId(client, id);
       const { nodes, edges } = await buildRelationGraph(client, numericId, depth);
@@ -116,6 +117,7 @@ export const registerRelationTools = (server: McpServer, client: MemosClient) =>
         .min(1)
         .describe("IDs of memos to add/remove as references. Numeric IDs or UID strings"),
     },
+    { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     async ({ id, action, targetIds }) => {
       const numericId = await resolveToNumericId(client, id);
 

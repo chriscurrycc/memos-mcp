@@ -23,6 +23,7 @@ export const registerResourceTools = (server: McpServer, client: MemosClient) =>
     "list_resources",
     "List all resources (attachments) owned by the current user.",
     {},
+    { readOnlyHint: true, openWorldHint: false },
     async () => {
       const result = await client.get<{ resources: Resource[] }>("/api/v1/resources");
       const summaries = (result.resources || []).map((r) =>
@@ -45,6 +46,7 @@ export const registerResourceTools = (server: McpServer, client: MemosClient) =>
         .optional()
         .describe("Memo ID to link this resource to"),
     },
+    { destructiveHint: false, openWorldHint: false },
     async ({ filename, contentBase64, type, memoId }) => {
       const mimeType = type ?? guessMimeType(filename);
       const body: Record<string, unknown> = {
@@ -74,6 +76,7 @@ export const registerResourceTools = (server: McpServer, client: MemosClient) =>
     {
       id: z.number().int().describe("Resource ID"),
     },
+    { destructiveHint: true, idempotentHint: true, openWorldHint: false },
     async ({ id }) => {
       await client.delete(`/api/v1/resources/${id}`);
       return { content: [{ type: "text" as const, text: `Resource ${id} deleted.` }] };
