@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MemosClient } from "../client.js";
 import type { Memo } from "../types.js";
+import { getPromptDefinitions } from "../prompts/index.js";
 
 export const registerResources = (server: McpServer, client: MemosClient) => {
   server.registerResource(
@@ -40,4 +41,28 @@ export const registerResources = (server: McpServer, client: MemosClient) => {
       };
     }
   );
+
+  // Expose prompts as readable resources so the assistant can access them
+  // programmatically (e.g. from channel conversations where slash commands
+  // are not available).
+  const prompts = getPromptDefinitions();
+  for (const [name, prompt] of Object.entries(prompts)) {
+    server.registerResource(
+      `prompt-${name}`,
+      `memo://prompts/${name}`,
+      {
+        description: `Prompt: ${prompt.description}`,
+        mimeType: "text/markdown",
+      },
+      async (uri) => ({
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "text/markdown",
+            text: prompt.text,
+          },
+        ],
+      })
+    );
+  }
 };
