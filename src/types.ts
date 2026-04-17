@@ -14,7 +14,6 @@ export interface Memo {
   creator: string;
   createTime: string;
   updateTime: string;
-  displayTime: string;
   content: string;
   visibility: Visibility;
   tags: string[];

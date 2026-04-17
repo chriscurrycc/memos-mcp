@@ -16,6 +16,15 @@ export class MemosClient {
     return this._currentUser;
   }
 
+  // Fetch the workspace MEMO_RELATED setting. Not cached: the setting can
+  // change at runtime and correctness matters more than saving one HTTP call.
+  async getMemoRelatedSetting(): Promise<{ displayWithUpdateTime?: boolean }> {
+    const res = await this.get<{
+      memoRelatedSetting?: { displayWithUpdateTime?: boolean };
+    }>("/api/v1/workspace/settings/MEMO_RELATED");
+    return res.memoRelatedSetting || {};
+  }
+
   private headers(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.token}`,

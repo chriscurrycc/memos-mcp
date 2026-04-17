@@ -22,11 +22,15 @@ export function summarizeMemo(memo: Record<string, unknown>) {
   const summary: Record<string, unknown> = {
     id: id ? Number(id) : undefined,
     uid: memo.uid,
-    displayTime: memo.displayTime,
+    createTime: memo.createTime,
     snippet,
     tags: memo.tags,
     visibility: memo.visibility,
   };
+
+  if (memo.updateTime && memo.updateTime !== memo.createTime) {
+    summary.updateTime = memo.updateTime;
+  }
 
   if (memo.pinned) summary.pinned = true;
 

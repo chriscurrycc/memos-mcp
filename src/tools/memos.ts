@@ -6,6 +6,8 @@ import { summarizeMemo } from "./utils.js";
 
 type Visibility = "PRIVATE" | "PROTECTED" | "PUBLIC";
 
+type OrderByField = "create_time" | "update_time";
+
 interface FilterOptions {
   creator: string;
   query?: string;
@@ -20,6 +22,7 @@ interface FilterOptions {
   hasCode?: boolean;
   hasIncompleteTasks?: boolean;
   random?: boolean;
+  orderByField?: OrderByField;
 }
 
 function parseToUnixTimestamp(isoString: string, paramName: string): number {
@@ -64,6 +67,7 @@ function buildCelFilter(opts: FilterOptions): string {
   if (opts.hasCode) parts.push(`has_code == true`);
   if (opts.hasIncompleteTasks) parts.push(`has_incomplete_tasks == true`);
   if (opts.random) parts.push(`random == true`);
+  if (opts.orderByField) parts.push(`order_by_field == "${opts.orderByField}"`);
 
   return parts.join(" && ");
 }
@@ -111,13 +115,14 @@ export const registerMemoTools = (
         visibility: z.array(visibilityEnum).optional().describe("Filter by visibility levels"),
         state: z.enum(["NORMAL", "ARCHIVED"]).optional().describe("Filter by memo state"),
         pinned: z.boolean().optional().describe("Filter by pinned status"),
-        startDate: z.string().optional().describe("Return memos after this date (ISO 8601, e.g. \"2025-01-01\")"),
-        endDate: z.string().optional().describe("Return memos before this date (ISO 8601, e.g. \"2025-03-01\")"),
+        startDate: z.string().optional().describe("Return memos after this date (ISO 8601, e.g. \"2025-01-01\"). Filters by create_time or update_time according to `orderBy`."),
+        endDate: z.string().optional().describe("Return memos before this date (ISO 8601, e.g. \"2025-03-01\"). Filters by create_time or update_time according to `orderBy`."),
         hasLink: z.boolean().optional().describe("Filter to memos containing links"),
         hasTaskList: z.boolean().optional().describe("Filter to memos containing task lists"),
         hasCode: z.boolean().optional().describe("Filter to memos containing code blocks"),
         hasIncompleteTasks: z.boolean().optional().describe("Filter to memos with incomplete tasks"),
         random: z.boolean().optional().describe("Return results in random order"),
+        orderBy: z.enum(["create_time", "update_time"]).optional().describe("Sort and date-filter by create_time or update_time. Defaults to the workspace setting."),
         pageSize: z.number().int().min(1).max(100).default(20).describe("Number of memos per page"),
         pageToken: z.string().optional().describe("Token for fetching the next page"),
       },
@@ -125,7 +130,13 @@ export const registerMemoTools = (
     },
     async (args) => {
       const currentUser = await client.getCurrentUser();
-      const filter = buildCelFilter({ creator: currentUser, ...args });
+      let orderByField: OrderByField | undefined = args.orderBy;
+      if (!orderByField) {
+        const setting = await client.getMemoRelatedSetting();
+        orderByField = setting.displayWithUpdateTime ? "update_time" : "create_time";
+      }
+      const { orderBy: _omit, ...rest } = args;
+      const filter = buildCelFilter({ creator: currentUser, ...rest, orderByField });
       const params: Record<string, string> = {
         pageSize: String(args.pageSize),
         filter,
