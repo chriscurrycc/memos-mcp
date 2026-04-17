@@ -88,10 +88,10 @@ claude mcp add --scope user memos -e MEMOS_URL=https://your-memos-instance.com -
 
 | Tool | Description |
 |------|-------------|
-| `list_memos` | Search and list memos with structured filters (keyword, tags, date range, visibility, pinned, content properties, etc.) |
+| `list_memos` | Search and list memos with structured filters (keyword, tags, date range, visibility, pinned, content properties, etc.) and optional `orderBy` (create_time / update_time; defaults to the workspace setting) |
 | `get_memo` | Get a single memo by numeric ID or UID string |
-| `create_memo` | Create a new memo with markdown content |
-| `update_memo` | Update content, visibility, pin, archive state, with optional `preserveUpdateTime` |
+| `create_memo` | Create a new memo with markdown content, optional `createTime` to backdate |
+| `update_memo` | Update content, visibility, pin, archive state, or override `createTime` / `updateTime`; optional `preserveUpdateTime` for style-only edits |
 | `delete_memo` | Permanently delete a memo |
 
 ### Tags
