@@ -35,6 +35,16 @@ function parseToUnixTimestamp(isoString: string, paramName: string): number {
   return Math.floor(date.getTime() / 1000);
 }
 
+function parseToRFC3339(isoString: string, paramName: string): string {
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) {
+    throw new Error(
+      `Invalid date format for ${paramName}. Use ISO 8601 format (e.g., "2025-01-01" or "2025-01-01T00:00:00Z").`
+    );
+  }
+  return date.toISOString();
+}
+
 function buildCelFilter(opts: FilterOptions): string {
   const parts: string[] = [`creator == "${opts.creator}"`];
 
@@ -181,14 +191,19 @@ export const registerMemoTools = (
       inputSchema: {
         content: z.string().min(1).describe("Memo content in markdown. Tags can be included with #tagname syntax"),
         visibility: visibilityEnum.optional().describe("Memo visibility. Omit to use the configured default"),
+        createTime: z.string().optional().describe("Backdate the memo. ISO 8601, e.g. \"2024-01-15\" or \"2024-01-15T10:00:00Z\". Must not be in the future. When set, both create_time and update_time are initialized to this value."),
       },
       annotations: { destructiveHint: false, openWorldHint: false },
     },
-    async ({ content, visibility }) => {
-      const memo = await client.post<Memo>("/api/v1/memos", {
+    async ({ content, visibility, createTime }) => {
+      const body: Record<string, unknown> = {
         content,
         visibility: visibility ?? options.defaultVisibility,
-      });
+      };
+      if (createTime) {
+        body.createTime = parseToRFC3339(createTime, "createTime");
+      }
+      const memo = await client.post<Memo>("/api/v1/memos", body);
       const id = memo.name?.match(/^memos\/(\d+)$/)?.[1];
       const url = `${client.baseUrl}/m/${memo.uid}`;
       const result = { id: id ? Number(id) : undefined, uid: memo.uid, visibility: memo.visibility, url };
@@ -206,11 +221,13 @@ export const registerMemoTools = (
         visibility: visibilityEnum.optional().describe("New visibility level"),
         pinned: z.boolean().optional().describe("Pin or unpin the memo"),
         state: z.enum(["NORMAL", "ARCHIVED"]).optional().describe("Set to ARCHIVED to archive, NORMAL to restore"),
+        createTime: z.string().optional().describe("Override the memo's creation time. ISO 8601. Must not be in the future. If both createTime and updateTime are set, createTime must be <= updateTime."),
+        updateTime: z.string().optional().describe("Override the memo's update time. ISO 8601. Must not be in the future. If both createTime and updateTime are set, updateTime must be >= createTime."),
         preserveUpdateTime: z.boolean().optional().describe("When true, the memo's update time will not change. Use for formatting or style-only edits"),
       },
       annotations: { destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    async ({ id, content, visibility, pinned, state, preserveUpdateTime }) => {
+    async ({ id, content, visibility, pinned, state, createTime, updateTime, preserveUpdateTime }) => {
       const numericId = await resolveToNumericId(client, id);
 
       const body: Record<string, unknown> = {};
@@ -232,13 +249,21 @@ export const registerMemoTools = (
         body.rowStatus = state === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
         updateMaskPaths.push("row_status");
       }
+      if (createTime !== undefined) {
+        body.createTime = parseToRFC3339(createTime, "createTime");
+        updateMaskPaths.push("create_time");
+      }
+      if (updateTime !== undefined) {
+        body.updateTime = parseToRFC3339(updateTime, "updateTime");
+        updateMaskPaths.push("update_time");
+      }
 
       if (updateMaskPaths.length === 0) {
         return {
           content: [
             {
               type: "text" as const,
-              text: "No fields to update. Provide at least one of: content, visibility, pinned, state.",
+              text: "No fields to update. Provide at least one of: content, visibility, pinned, state, createTime, updateTime.",
             },
           ],
         };
